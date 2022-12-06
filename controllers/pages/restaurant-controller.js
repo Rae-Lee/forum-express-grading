@@ -1,5 +1,5 @@
-const { Restaurant, User, Category, Comment } = require('../models')
-const { getOffset, getPagination } = require('../helpers/pagination-helper')
+const { Restaurant, User, Category, Comment } = require('../../models')
+const { getOffset, getPagination } = require('../../helpers/pagination-helper')
 
 module.exports = {
   getRestaurants: (req, res, next) => {
