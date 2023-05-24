@@ -1,16 +1,15 @@
 const { Restaurant, User, Category } = require('../../models')
 const { imgurFileHandler } = require('../../helpers/file-helpers')
+const adminServices = require('../../services/admin-services')
 module.exports = {
   getRestaurants: (req, res, next) => {
-    Restaurant.findAll({ raw: true, nest: true, include: [Category] })
-      .then(restaurants => res.render('admin/restaurants', { restaurants }))
-      .catch(err => next(err))
+    adminServices.getRestaurants(req, (err, data) => { err ? next(err) : res.render('admin/restaurants', data) })
   },
   createRestaurant: (req, res) => {
     Category.findAll({ raw: true })
-    .then(categories => {
-      return res.render('admin/create-restaurant', { categories })
-    })
+      .then(categories => {
+        return res.render('admin/create-restaurant', { categories })
+      })
   },
   postRestaurant: (req, res, next) => {
     const { name, tel, address, openingHours, description, categoryId } = req.body // 從 req.body 拿出表單裡的資料
@@ -69,7 +68,7 @@ module.exports = {
           address,
           openingHours,
           description,
-          image: filePath || restaurant.image,// 如果 filePath 是 Truthy (使用者有上傳新照片) 就用 filePath，是 Falsy (使用者沒有上傳新照片) 就沿用原本資料庫內的值
+          image: filePath || restaurant.image, // 如果 filePath 是 Truthy (使用者有上傳新照片) 就用 filePath，是 Falsy (使用者沒有上傳新照片) 就沿用原本資料庫內的值
           categoryId
         })
       })
@@ -80,13 +79,11 @@ module.exports = {
       .catch(err => next(err))
   },
   deleteRestaurant: (req, res, next) => { // 新增以下
-    return Restaurant.findByPk(req.params.id)
-      .then(restaurant => {
-        if (!restaurant) throw new Error("Restaurant didn't exist!")
-        return restaurant.destroy()
-      })
-      .then(() => res.redirect('/admin/restaurants'))
-      .catch(err => next(err))
+    adminServices.getRestaurants(req, (err, data) => {
+      if (err) return next(err)
+      req.session.deletedData = data
+      return res.redirect('/admin/restaurants')
+    })
   },
   getUsers: (req, res, next) => {
     return User.findAll({ raw: true })
